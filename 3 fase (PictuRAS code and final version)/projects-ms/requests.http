@@ -1,0 +1,104 @@
+### Create a project
+POST http://localhost/api/v1/projects
+Content-Type: application/json
+
+{
+  "name": "My Project"
+}
+
+> {%
+    client.global.set("project", response.body.id);
+%}
+
+### Gets my projects
+GET http://localhost/api/v1/projects
+Content-Type: application/json
+
+### Gets a project
+GET http://localhost/api/v1/projects/{{project}}
+Content-Type: application/json
+
+{
+  "name": "My Project"
+}
+
+### Uploads an image to a project
+POST http://localhost/api/v1/projects/{{project}}/images
+Content-Type: multipart/form-data; boundary=----WebKitFormBoundary7MA4YWxkTrZu0gW
+
+------WebKitFormBoundary7MA4YWxkTrZu0gW
+Content-Disposition: form-data; name="image"; filename="image.jpg"
+Content-Type: image/png
+
+< ./image.jpg
+------WebKitFormBoundary7MA4YWxkTrZu0gW--
+
+> {%
+    client.global.set("image", response.body[0].id);
+%}
+
+### Gets an image from a project
+GET http://localhost/api/v1/projects/{{project}}/images/{{image}}
+
+### Gets all images from a project
+GET http://localhost/api/v1/projects/{{project}}/images
+
+### Deletes an image from a project
+DELETE http://localhost/api/v1/projects/{{project}}/images/{{image}}
+
+### Get all tools applied to a project
+GET http://localhost/api/v1/projects/{{project}}/tools
+
+### Add a tool to a project
+POST http://localhost/api/v1/projects/{{project}}/tools
+Content-Type: application/json
+
+{
+  "procedure": "blur",
+  "parameters": {
+    "radius": 10
+  }
+}
+
+### Apply the added tools to all the images in a project
+POST http://localhost/api/v1/projects/{{project}}/tools/apply
+
+### Sets a tools list to the project
+PUT http://localhost/api/v1/projects/{{project}}/tools
+Content-Type: application/json
+
+[
+  {
+    "procedure": "blur",
+    "parameters": {
+      "radius": 10
+    }
+  },
+  {
+    "procedure": "rotate",
+    "parameters": {
+      "angle": 90
+    }
+  }
+]
+
+### Get all image versions from a project
+GET http://localhost/api/v1/projects/{{project}}/tools/images
+
+> {%
+    client.global.set("image_version", response.body[0].id);
+%}
+
+### Download an image version from a project
+GET http://localhost/api/v1/projects/{{project}}/tools/images/{{image_version}}
+
+## websocket implementation is broken
+## wscat -c ws://127.0.0.1/api/v1/projects/89ca8ff4-e77e-4368-88bf-5c73c6c088c0/ws -H x-user-id:4d5b989d-78b1-456c-a9e3-07b0b786bdf1 -H x-user-name:Chico -H x-user-email:mail@chicoferreira.dev
+### Get a websocket connection to a project
+WEBSOCKET ws://localhost/api/v1/projects/{{project}}/ws
+
+> {%
+    response.body.onEachMessage((message, _unsubscribe, _output) => {
+        client.log("We received a message from the server: " + message);
+    });
+%}

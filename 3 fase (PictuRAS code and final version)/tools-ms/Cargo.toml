@@ -1,0 +1,22 @@
+[package]
+name = "tools-ms"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = { version = "1.0.95", features = [] }
+photon-rs = { git = "https://github.com/silvia-odwyer/photon", rev = "941adf9d2a60f9b92a2b8016b5036033dbffb192" }
+serde = { version = "1.0.217", features = ["derive"] }
+serde_json = "1.0.134"
+image = "0.24.9"
+leptess = "0.14.0"
+tokio = { version = "1.42.0", features = ["full"] }
+lapin = "2.5.0"
+futures-util = "0.3.31"
+chrono = { version = "0.4.39", features = ["serde"] }
+uuid = { version = "1.11.0", features = ["v4"] }
+envy = "0.4.2"
+serde-inline-default = "0.2.3"
+tracing-subscriber = "0.3.19"
+tracing = "0.1.41"
+thiserror = "2.0.11"

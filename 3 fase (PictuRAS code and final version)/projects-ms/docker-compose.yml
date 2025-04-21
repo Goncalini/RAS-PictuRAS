@@ -1,0 +1,71 @@
+services:
+  db-projects-ms:
+    image: postgres:14.1-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+      POSTGRES_DB: ${PG_DATABASE}
+    volumes:
+      - db-projects-ms:/var/lib/postgresql/data
+    networks:
+      - picturas-network
+    healthcheck:
+      test: pg_isready -U ${PG_USER} -d ${PG_DATABASE} -h localhost
+  rabbitmq:
+    image: rabbitmq:4-management-alpine
+    container_name: rabbitmq
+    restart: always
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq/
+      - rabbitmq-logs:/var/log/rabbitmq/
+    healthcheck:
+      test: rabbitmq-diagnostics check_port_connectivity
+      interval: 5s
+      timeout: 30s
+    networks:
+      - picturas-network
+  projects-ms:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    environment:
+      - PG_HOST=db-projects-ms
+      - PG_USER
+      - PG_PASSWORD
+      - PG_PORT=5432
+      - PG_DATABASE
+      - RABBITMQ_RESULTS_EXCHANGE
+      - RABBITMQ_RESULTS_ROUTING_KEY
+      - BIND_IP
+      - BIND_PORT
+      - PICTURAS_AVAILABLE_TOOLS
+      - PICTURAS_PUBLIC_URL
+      - PICTURAS_IMAGE_FOLDER=/images
+      - RABBITMQ_HOST=rabbitmq
+      - RABBITMQ_USER=guest
+      - RABBITMQ_PASSWORD=guest
+      - RUST_LOG=INFO
+      - ACCESS_TOKEN_PUBLIC_KEY=/run/secrets/access_token_public_key
+    secrets:
+      - access_token_public_key
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      db-projects-ms:
+        condition: service_healthy
+    volumes:
+      - images:/images
+    networks:
+      - picturas-network
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:${BIND_PORT}/api/v1/health || exit 1" ]
+      interval: 5s
+      timeout: 10s
+      retries: 3
+      start_period: 1s
+volumes:
+  db-projects-ms:
+  rabbitmq-data:
+  rabbitmq-logs:
